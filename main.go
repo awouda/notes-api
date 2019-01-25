@@ -15,25 +15,13 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-
 	r.Route("/notes", func(r chi.Router) {
-			r.Get("/", listNotes)
-		})
+		r.Get("/", listNotes)
+	})
 
-
-	http.ListenAndServe(":3000", r	)
-
-
-
-
-
-
+	http.ListenAndServe(":3000", r)
 
 }
-
-
-
-
 
 func listNotes(w http.ResponseWriter, r *http.Request) {
 
@@ -47,11 +35,8 @@ func listNotes(w http.ResponseWriter, r *http.Request) {
 func NewNoteResponse(note *Note) *NoteResponse {
 	resp := &NoteResponse{Note: note}
 
-
 	return resp
 }
-
-
 
 type ErrResponse struct {
 	Err            error `json:"-"` // low-level runtime error
@@ -61,8 +46,6 @@ type ErrResponse struct {
 	AppCode    int64  `json:"code,omitempty"`  // application-specific error code
 	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
 }
-
-
 
 func (n *Note) Render(w http.ResponseWriter, r *http.Request) render.Renderer {
 	return nil
@@ -80,8 +63,3 @@ func (rd *NoteResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	rd.Elapsed = 10
 	return nil
 }
-
-
-
-
-
