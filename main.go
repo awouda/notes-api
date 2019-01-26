@@ -5,7 +5,11 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"net/http"
 	"github.com/go-chi/render"
+	"github.com/awouda/notes-api/domain"
 )
+
+
+type AppNote domain.Note
 
 func main() {
 	r := chi.NewRouter()
@@ -32,8 +36,8 @@ func listNotes(w http.ResponseWriter, r *http.Request) {
 	//}
 }
 
-func NewNoteResponse(note *Note) *NoteResponse {
-	resp := &NoteResponse{Note: note}
+func NewNoteResponse(note *AppNote) *NoteResponse {
+	resp := &NoteResponse{AppNote: note}
 
 	return resp
 }
@@ -47,12 +51,12 @@ type ErrResponse struct {
 	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
 }
 
-func (n *Note) Render(w http.ResponseWriter, r *http.Request) render.Renderer {
-	return nil
-}
+//func (n *domain.Note) Render(w http.ResponseWriter, r *http.Request) render.Renderer {
+//	return nil
+//}
 
 type NoteResponse struct {
-	*Note
+	*AppNote
 	// We add an additional field to the response here.. such as this
 	// elapsed computed property
 	Elapsed int64 `json:"elapsed"`
@@ -62,4 +66,11 @@ func (rd *NoteResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	// Pre-processing before a response is marshalled and sent across the wire
 	rd.Elapsed = 10
 	return nil
+}
+
+
+var notes = []*AppNote{
+	{ID: "1", Content:"notitie 1"},
+	{ID: "2", Content:"notitie 2"},
+	{ID: "3", Content:"notitie 3"},
 }
