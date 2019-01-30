@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -23,8 +24,11 @@ func main() {
 	//var count = flag.Int("count", 5, "the count of items")
 	//flag.Parse()
 	//fmt.Println("count value ", *count)
+    domain.InitDb()
+	domain.DB.AutoMigrate(&AppNote{})
 
 
+	defer domain.DB.Close()
 
 	r := chi.NewRouter()
 
@@ -42,7 +46,13 @@ func main() {
 
 }
 
+//TODO tidy up the methods below
+
+
 func ListNotes(w http.ResponseWriter, r *http.Request) {
+
+	domain.DB.Find(&notes)
+
 	if err := render.RenderList(w, r, NewArticleListResponse(notes)); err != nil {
 		render.Render(w, r, ErrRender(err))
 		return
@@ -83,8 +93,8 @@ func NewArticleListResponse(notes []*AppNote) []render.Renderer {
 
 func dbNewNote(note *AppNote) (string, error) {
 	note.ID = fmt.Sprintf("%d", rand.Intn(100)+10)
-	notes = append(notes, note)
-	fmt.Println(len(notes))
+	domain.DB.Create(note)
+
 	return note.ID, nil
 }
 
@@ -156,8 +166,4 @@ func ErrInvalidRequest(err error) render.Renderer {
 
 
 
-var notes = []*AppNote{
-	{ID: "1", Content:"notitie 1"},
-	{ID: "2", Content:"notitie 2"},
-	{ID: "3", Content:"notitie 3"},
-}
+var notes []*AppNote
