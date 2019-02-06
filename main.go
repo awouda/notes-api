@@ -11,6 +11,11 @@ type Note domain.Note
 
 func main() {
 
+	//TODO use JWT / OAUTH
+	// make static file serving work!
+	// make login page
+	// serve responses in html
+
 	//example commandline parsing, maybe we need it later
 	//var count = flag.Int("count", 5, "the count of items")
 	//flag.Parse()
@@ -49,11 +54,11 @@ func createNote(c echo.Context) (err error) {
 	return c.JSON(http.StatusCreated, n)
 }
 
-func dbNewNote(note *Note) (*Note, error) {
+func dbNewNote(note *Note) error {
 
 	domain.DB.Create(note)
 
-	return note, nil
+	return nil
 }
 
 var notes []*Note
