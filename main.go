@@ -30,6 +30,8 @@ func main() {
 
 	defer domain.DB.Close()
 
+
+
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -37,12 +39,15 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/", fs)
+
 	r.Route("/notes", func(r chi.Router) {
 		r.Get("/", ListNotes)
 		r.Post("/", CreateNote)
 	})
 
-	http.ListenAndServe(":3000", r)
+	http.ListenAndServe(":3000", nil)
 
 }
 
@@ -92,7 +97,7 @@ func NewArticleListResponse(notes []*AppNote) []render.Renderer {
 }
 
 func dbNewNote(note *AppNote) (string, error) {
-	note.ID = fmt.Sprintf("%d", rand.Intn(100)+10)
+	note.ID = fmt.Sprintf("%d", rand.Intn(1000000)+rand.Intn(10))
 	domain.DB.Create(note)
 
 	return note.ID, nil
