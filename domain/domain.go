@@ -1,7 +1,9 @@
 package domain
 
+import "github.com/jinzhu/gorm"
+
 type Note struct {
-	ID      string `json:"id"`
+	gorm.Model
 	Content string `json:"content"`
 }
 

@@ -1,174 +1,64 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"github.com/awouda/notes-api/domain"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/render"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"math/rand"
+	"github.com/labstack/echo"
 	"net/http"
-	"strings"
 )
 
-
-type AppNote domain.Note
-
-
+type Note domain.Note
 
 func main() {
 
-    //example commandline parsing, maybe we need it later
+	//TODO use JWT / OAUTH
+	// make static file serving work!
+	// make login page
+	// serve responses in html
+
+	//example commandline parsing, maybe we need it later
 	//var count = flag.Int("count", 5, "the count of items")
 	//flag.Parse()
 	//fmt.Println("count value ", *count)
-    domain.InitDb()
-	domain.DB.AutoMigrate(&AppNote{})
-
+	domain.InitDb()
+	domain.DB.AutoMigrate(&Note{})
 
 	defer domain.DB.Close()
 
+	e := echo.New()
 
+	n := e.Group("/notes")
+	n.GET("", listNotes)
+	n.POST("", createNote)
 
-	r := chi.NewRouter()
+	e.File("/", "public/index.html")
 
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-
-	fs := http.FileServer(http.Dir("static"))
-	http.Handle("/", fs)
-
-	r.Route("/notes", func(r chi.Router) {
-		r.Get("/", ListNotes)
-		r.Post("/", CreateNote)
-	})
-
-	http.ListenAndServe(":3000", nil)
-
+	e.Logger.Fatal(e.Start(":3000"))
 }
 
-//TODO tidy up the methods below
-
-
-func ListNotes(w http.ResponseWriter, r *http.Request) {
+func listNotes(c echo.Context) error {
 
 	domain.DB.Find(&notes)
+	return c.JSON(http.StatusOK, &notes)
 
-	if err := render.RenderList(w, r, NewArticleListResponse(notes)); err != nil {
-		render.Render(w, r, ErrRender(err))
-		return
-	}
 }
 
-func CreateNote(w http.ResponseWriter, r *http.Request) {
-	data := &NoteRequest{}
-	if err := render.Bind(r, data); err != nil {
-		render.Render(w, r, ErrInvalidRequest(err))
+func createNote(c echo.Context) (err error) {
+	n := new(Note)
+
+	if err = c.Bind(n); err != nil {
 		return
 	}
 
-	article := data.AppNote
-	dbNewNote(article)
-
-	render.Status(r, http.StatusCreated)
-	render.Render(w, r, NewNoteResponse(article))
+	dbNewNote(n)
+	return c.JSON(http.StatusCreated, n)
 }
 
+func dbNewNote(note *Note) error {
 
-func NewNoteResponse(note *AppNote) *NoteResponse {
-	resp := &NoteResponse{AppNote: note}
-
-	return resp
-}
-
-
-type NoteListResponse []*NoteResponse
-
-func NewArticleListResponse(notes []*AppNote) []render.Renderer {
-	list := []render.Renderer{}
-	for _, note := range notes {
-		list = append(list, NewNoteResponse(note))
-	}
-	return list
-}
-
-func dbNewNote(note *AppNote) (string, error) {
-	note.ID = fmt.Sprintf("%d", rand.Intn(1000000)+rand.Intn(10))
 	domain.DB.Create(note)
 
-	return note.ID, nil
-}
-
-type ErrResponse struct {
-	Err            error `json:"-"` // low-level runtime error
-	HTTPStatusCode int   `json:"-"` // http response status code
-
-	StatusText string `json:"status"`          // user-level status message
-	AppCode    int64  `json:"code,omitempty"`  // application-specific error code
-	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
-}
-
-//func (n *domain.Note) Render(w http.ResponseWriter, r *http.Request) render.Renderer {
-//	return nil
-//}
-
-
-
-type NoteResponse struct {
-	*AppNote
-	// We add an additional field to the response here.. such as this
-	// elapsed computed property
-	Elapsed int64 `json:"elapsed"`
-}
-type NoteRequest struct {
-	*AppNote
-	// We add an additional field to the response here.. such as this
-	// elapsed computed property
-	User string `json:"user,omitempty"`
-}
-
-func (n *NoteRequest) Bind(r *http.Request) error {
-	// a.Article is nil if no Article fields are sent in the request. Return an
-	// error to avoid a nil pointer dereference.
-	if n.AppNote == nil {
-		return errors.New("missing required Note fields.")
-	}
-
-
-	if n.User == "" {
-       fmt.Println("user was empty")
-	} else {
-		fmt.Println("user was ", n.User)
-	}
-
-
-
-	n.AppNote.Content = strings.ToLower(n.Content) // as an example, we down-case
 	return nil
 }
 
-func (rd *NoteResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	// Pre-processing before a response is marshalled and sent across the wire
-	rd.Elapsed = 10
-	return nil
-}
-
-
-
-
-func ErrInvalidRequest(err error) render.Renderer {
-	return &ErrResponse{
-		Err:            err,
-		HTTPStatusCode: 400,
-		StatusText:     "Invalid request.",
-		ErrorText:      err.Error(),
-	}
-}
-
-
-
-var notes []*AppNote
+var notes []*Note
