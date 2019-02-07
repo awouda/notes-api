@@ -9,7 +9,7 @@ go get github.com/mattn/go-sqlite3
 
 Then run
 ```
-go run github.com/awouda/notes-api
+go run main.go
 ```
 
 ## Working urls
