@@ -12,7 +12,10 @@ Then run
 go run main.go
 ```
 
-## Working urls
+And navigate to [http://localhost:3000](http://localhost:3000).
+
+
+## Test json api
 
 I'm using [Httpie](https://httpie.org/)
 
