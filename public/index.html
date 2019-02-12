@@ -39,6 +39,7 @@
 <script>
     var app = new Vue({
         el: '#app',
+
         data: {
             notes: [],
             noteText: ""
@@ -50,8 +51,12 @@
             list: function () {
                 axios.get('/notes')
                     .then(res => {
-                        this.notes = res.data ? res.data : []
-                      //  this.notes = this.notes.map( n => n.createdAt = $.format.date(new Date(n.CreatedAt), 'yyyy/MM/dd HH:mm:ss'))
+                        this.notes = res.data ? res.data : [];
+                        this.notes = this.notes.map(n => {
+                            n.CreatedAt = $.format.date(new Date(n.CreatedAt), 'yyyy/MM/dd HH:mm:ss');
+                            return n;
+                        });
+
                     })
                     .catch(e => this.failed('Unsuccesful'))
             },
